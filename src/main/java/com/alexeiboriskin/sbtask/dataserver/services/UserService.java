@@ -73,7 +73,11 @@ public class UserService {
         User exampleUser = new User();
         exampleUser.setUsername(username);
         ExampleMatcher matcher =
-                matching().withIgnoreNullValues().withIgnorePaths("id").withMatcher("username", GenericPropertyMatcher::exact);
+                matching()
+                        .withIgnoreNullValues()
+                        .withIgnorePaths("id")
+                        .withIgnorePaths("passEncoded")
+                        .withMatcher("username", GenericPropertyMatcher::exact);
 
         return userRepository.findOne(Example.of(exampleUser, matcher)).orElse(null);
     }

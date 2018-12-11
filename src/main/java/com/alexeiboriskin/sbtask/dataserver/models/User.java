@@ -1,7 +1,8 @@
 package com.alexeiboriskin.sbtask.dataserver.models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -11,13 +12,16 @@ import java.util.Set;
 @DynamicUpdate
 public class User {
 
+    private static final PasswordEncoder PASSWORD_ENCODER =
+            new BCryptPasswordEncoder();
+
     private long id;
     private String username;
     private String firstName;
     private String lastName;
     private String email;
-    private String password;
     private boolean passEncoded;
+    private String password;
     private Set<Role> roles;
 
     public User(String username, String firstName, String lastName,
@@ -77,14 +81,28 @@ public class User {
         this.email = email;
     }
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    public boolean isPassEncoded() {
+        return passEncoded;
+    }
+
+    public void setPassEncoded(boolean passEncoded) {
+        this.passEncoded = passEncoded;
+    }
+
     @Column(name = "PASSWORD", nullable = false, updatable = false)
     public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        if (password != null) {
+            if (!isPassEncoded()) {
+                this.password = PASSWORD_ENCODER.encode(password);
+                setPassEncoded(true);
+            } else {
+                this.password = password;
+            }
+        }
     }
 
     @JoinTable(name = "USER_ROLE", joinColumns = {@JoinColumn(name = "USER_ID"
